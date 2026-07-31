@@ -1,13 +1,58 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #222831;
-  --color-secondary: #393e46;
-  --color-textPrimary: #d8d9da;
+  --color-primary: #121824;
+  --color-secondary: #1e293b;
+  --color-textPrimary: #e2e8f0;
 }
 
-body{
-  background-color: #222831;
+body {
+  background-color: #121824;
+  color: #e2e8f0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* Custom scrollbars for a premium dark layout */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #121824;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2e3748;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f4d63;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Style native date picker icon to match the teal theme */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(75%) sepia(80%) saturate(400%) hue-rotate(130deg);
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px;
+  transition: transform 0.15s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  transform: scale(1.1);
+}
 

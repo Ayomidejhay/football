@@ -1,31 +1,26 @@
-import { getNewsInfo } from '@/api'
-import { newsType } from '@/types'
-import Image from 'next/image'
-import Link from 'next/link'
-import React from 'react'
+import React from "react";
+import { getNewsInfo, getTransferGossipInfo } from "@/api";
+import { newsType } from "@/types";
+import NewsTabs from "./NewsTabs";
 
-const News =  async () => {
-    const getNews = await getNewsInfo()
-    const newsData:newsType[] = getNews.articles
+const News = async () => {
+  // Fetch both headlines and transfers concurrently on the server
+  const [getNews, getTransfers] = await Promise.all([
+    getNewsInfo(),
+    getTransferGossipInfo()
+  ]);
+
+  const newsData: newsType[] = getNews?.articles || [];
+  const transferData: newsType[] = getTransfers?.articles || [];
+
   return (
-    <div className='w-[350px] bg-[rgb(40,46,58)] rounded-md px-2 md:px-6 py-2'>
-        <h1 className='text-xl text-teal-400 font-boldmb-4'>News - Top Headlines</h1>
-        <div>
-            {newsData.map((news) => (
-                <Link key={news.title} href={news.url} legacyBehavior>
-                    <a href="" target='_blank'>
-                        <div className='relative w-full h-[150px] mb-4 group'>
-                            <Image src={news?.urlToImage != null ? news?.urlToImage : '/img/news-football.webp'} alt={news.title} fill className='object-cover rounded-md'/>
-                            <div className='absolute bottom-0 left-0 w-full p-2 z-10 bg-gradient-to-t from-zinc-900 to-transparent'>
-                                <p className='font-semibold text-lg group-hover:text-teal-400'>{news?.title}</p>
-                            </div>
-                        </div>
-                    </a>
-                </Link>
-            ))}
-        </div>
-    </div>
-  )
-}
+    <aside className="w-full lg:w-[350px] shrink-0 p-4 bg-[rgb(40,46,58)] rounded-2xl border border-slate-700/40 shadow-lg">
+      <h2 className="text-sm font-bold uppercase tracking-wider text-teal-400 mb-3 px-1">
+        Football News Hub
+      </h2>
+      <NewsTabs newsData={newsData} transferData={transferData} />
+    </aside>
+  );
+};
 
-export default News
+export default News;

@@ -11,7 +11,12 @@ const Navbar = () => {
             </div>
             <span className='text-2xl font-bold hidden md:block'>Football info</span>
         </Link>
-        
+        <Link
+          href="/compare"
+          className="px-3.5 py-1.5 rounded-xl bg-slate-800 border border-slate-700/50 hover:bg-slate-700/85 hover:border-slate-600/80 text-xs font-bold text-teal-400 hover:text-white transition-all shadow-sm flex items-center space-x-1.5 cursor-pointer"
+        >
+          <span>📊 Compare Players</span>
+        </Link>
     </div>
   )
 }
