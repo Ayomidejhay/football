@@ -31,57 +31,11 @@ interface H2HData {
   }>;
 }
 
-interface MatchStats {
-  possession: [number, number];
-  shotsTotal: [number, number];
-  shotsOnTarget: [number, number];
-  corners: [number, number];
-  fouls: [number, number];
-  yellowCards: [number, number];
-  redCards: [number, number];
-}
-
 interface MatchInsightViewProps {
   matchDetails: any;
   h2hData: H2HData | null;
   externalData: any;
 }
-
-const generateMatchStats = (matchId: number, homeScore: number, awayScore: number): MatchStats => {
-  const seed = (matchId % 100) / 100;
-  const goalDiff = homeScore - awayScore;
-  let homePossession = 50 + goalDiff * 4 + Math.round((seed - 0.5) * 10);
-  homePossession = Math.max(30, Math.min(70, homePossession));
-  const awayPossession = 100 - homePossession;
-
-  const homeShots = Math.max(homeScore * 2 + 4, Math.round(seed * 12) + 5);
-  const awayShots = Math.max(awayScore * 2 + 3, Math.round((1 - seed) * 12) + 4);
-
-  const homeOnTarget = Math.max(homeScore, Math.round(homeShots * (0.3 + seed * 0.2)));
-  const awayOnTarget = Math.max(awayScore, Math.round(awayShots * (0.2 + (1 - seed) * 0.3)));
-
-  const homeCorners = Math.max(0, Math.round(homeShots * 0.4 + seed * 3));
-  const awayCorners = Math.max(0, Math.round(awayShots * 0.3 + (1 - seed) * 3));
-
-  const homeFouls = Math.round(8 + seed * 8);
-  const awayFouls = Math.round(9 + (1 - seed) * 8);
-
-  const homeYellow = Math.max(0, Math.round(seed * 4));
-  const awayYellow = Math.max(0, Math.round((1 - seed) * 4));
-  
-  const homeRed = seed > 0.92 ? 1 : 0;
-  const awayRed = (1 - seed) > 0.92 ? 1 : 0;
-
-  return {
-    possession: [homePossession, awayPossession],
-    shotsTotal: [homeShots, awayShots],
-    shotsOnTarget: [homeOnTarget, awayOnTarget],
-    corners: [homeCorners, awayCorners],
-    fouls: [homeFouls, awayFouls],
-    yellowCards: [homeYellow, awayYellow],
-    redCards: [homeRed, awayRed]
-  };
-};
 
 interface PredictorCardProps {
   matchId: number;
@@ -101,15 +55,6 @@ const PredictorCard = ({ matchId, homeTeamName, awayTeamName }: PredictorCardPro
     }
   }, [matchId]);
 
-  // Generate stable mock voting distribution based on matchId seed
-  const distribution = React.useMemo(() => {
-    const seed = (matchId % 97) / 97;
-    const baseHome = Math.round(35 + seed * 30); // 35 - 65
-    const baseDraw = Math.round(15 + (1 - seed) * 15); // 15 - 30
-    const baseAway = 100 - baseHome - baseDraw;
-    return { home: baseHome, draw: baseDraw, away: baseAway };
-  }, [matchId]);
-
   const handleVote = (vote: string) => {
     localStorage.setItem(`match-prediction-${matchId}`, vote);
     setUserVote(vote);
@@ -121,81 +66,37 @@ const PredictorCard = ({ matchId, homeTeamName, awayTeamName }: PredictorCardPro
     );
   }
 
-  // If user has voted, show progress distributions
+  // If user has voted, show their prediction choice
   if (userVote) {
     const isHome = userVote === "HOME";
     const isDraw = userVote === "DRAW";
     const isAway = userVote === "AWAY";
 
-    let homePct = distribution.home;
-    let drawPct = distribution.draw;
-    let awayPct = distribution.away;
-
-    if (isHome) homePct += 2;
-    else if (isDraw) drawPct += 2;
-    else if (isAway) awayPct += 2;
-    const total = homePct + drawPct + awayPct;
-    homePct = Math.round((homePct / total) * 100);
-    drawPct = Math.round((drawPct / total) * 100);
-    awayPct = 100 - homePct - drawPct;
-
     return (
       <div className="bg-gradient-to-r from-slate-800/40 to-slate-800/20 p-5 rounded-2xl border border-slate-700/30 shadow-md space-y-4 animate-fade-in">
         <div className="flex justify-between items-center">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Match Prediction Hub</h3>
-          <span className="text-[10px] bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2 py-0.5 rounded font-bold">
-            Predicted {userVote}
+          <span className="text-[10px] bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2.5 py-0.5 rounded font-bold">
+            Prediction Saved
           </span>
         </div>
 
-        <div className="space-y-3">
-          <div className="space-y-2">
-            {/* Home Win */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className={isHome ? "text-teal-400 font-bold" : "text-slate-350"}>
-                  {homeTeamName} Win
-                </span>
-                <span className="text-slate-400 font-bold">{homePct}%</span>
-              </div>
-              <div className="h-2 w-full bg-slate-700/30 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-1000 ${isHome ? "bg-teal-400" : "bg-slate-500"}`}
-                  style={{ width: `${homePct}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Draw */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className={isDraw ? "text-teal-400 font-bold" : "text-slate-350"}>Draw</span>
-                <span className="text-slate-400 font-bold">{drawPct}%</span>
-              </div>
-              <div className="h-2 w-full bg-slate-700/30 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-1000 ${isDraw ? "bg-teal-400" : "bg-slate-500"}`}
-                  style={{ width: `${drawPct}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Away Win */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className={isAway ? "text-teal-400 font-bold" : "text-slate-350"}>
-                  {awayTeamName} Win
-                </span>
-                <span className="text-slate-400 font-bold">{awayPct}%</span>
-              </div>
-              <div className="h-2 w-full bg-slate-700/30 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-1000 ${isAway ? "bg-teal-400" : "bg-slate-500"}`}
-                  style={{ width: `${awayPct}%` }}
-                />
-              </div>
-            </div>
+        <div className="flex items-center justify-between py-2">
+          <div>
+            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Your Pick</p>
+            <p className="text-sm font-extrabold text-white mt-1">
+              {isHome ? `${homeTeamName} Win` : isDraw ? "Draw Match" : `${awayTeamName} Win`}
+            </p>
           </div>
+          <button
+            onClick={() => {
+              localStorage.removeItem(`match-prediction-${matchId}`);
+              setUserVote(null);
+            }}
+            className="px-3 py-1.5 rounded-lg bg-slate-750 border border-slate-700/50 hover:border-slate-500 text-[10px] text-slate-350 font-bold hover:text-white transition-all cursor-pointer"
+          >
+            Change prediction
+          </button>
         </div>
       </div>
     );
@@ -813,29 +714,9 @@ const MatchInsightView = ({ matchDetails, h2hData, externalData }: MatchInsightV
               }
 
               // Fallback
-              const mockStats = generateMatchStats(
-                matchDetails.id,
-                homeScore ?? 0,
-                awayScore ?? 0
-              );
-
               return (
-                <div className="bg-slate-800/40 p-6 rounded-2xl border border-slate-700/30 space-y-4 max-w-2xl mx-auto shadow-sm">
-                  <div className="text-center border-b border-slate-700/50 pb-3 flex justify-between items-center">
-                    <span className="text-[9px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded font-extrabold border border-amber-500/10 tracking-wider">SIMULATED</span>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Team Statistics</h4>
-                    <div className="w-16"></div>
-                  </div>
-
-                  <div className="divide-y divide-slate-800/30">
-                    {renderStatRow("Ball Possession", mockStats.possession[0], mockStats.possession[1], mockStats.possession[0], mockStats.possession[1], "%")}
-                    {renderStatRow("Total Shots", mockStats.shotsTotal[0], mockStats.shotsTotal[1], getPercentage(mockStats.shotsTotal[0], mockStats.shotsTotal[0] + mockStats.shotsTotal[1]), getPercentage(mockStats.shotsTotal[1], mockStats.shotsTotal[0] + mockStats.shotsTotal[1]))}
-                    {renderStatRow("Shots on Target", mockStats.shotsOnTarget[0], mockStats.shotsOnTarget[1], getPercentage(mockStats.shotsOnTarget[0], mockStats.shotsOnTarget[0] + mockStats.shotsOnTarget[1]), getPercentage(mockStats.shotsOnTarget[1], mockStats.shotsOnTarget[0] + mockStats.shotsOnTarget[1]))}
-                    {renderStatRow("Corners", mockStats.corners[0], mockStats.corners[1], getPercentage(mockStats.corners[0], mockStats.corners[0] + mockStats.corners[1]), getPercentage(mockStats.corners[1], mockStats.corners[0] + mockStats.corners[1]))}
-                    {renderStatRow("Fouls Committed", mockStats.fouls[0], mockStats.fouls[1], getPercentage(mockStats.fouls[0], mockStats.fouls[0] + mockStats.fouls[1]), getPercentage(mockStats.fouls[1], mockStats.fouls[0] + mockStats.fouls[1]))}
-                    {renderStatRow("Yellow Cards", mockStats.yellowCards[0], mockStats.yellowCards[1], getPercentage(mockStats.yellowCards[0], mockStats.yellowCards[0] + mockStats.yellowCards[1]), getPercentage(mockStats.yellowCards[1], mockStats.yellowCards[0] + mockStats.yellowCards[1]))}
-                    {renderStatRow("Red Cards", mockStats.redCards[0], mockStats.redCards[1], getPercentage(mockStats.redCards[0], mockStats.redCards[0] + mockStats.redCards[1]), getPercentage(mockStats.redCards[1], mockStats.redCards[0] + mockStats.redCards[1]))}
-                  </div>
+                <div className="bg-slate-800/40 p-6 rounded-2xl border border-slate-700/30 max-w-2xl mx-auto shadow-sm text-center py-12">
+                  <p className="text-slate-400 text-xs font-semibold">Team statistics are not available for this match.</p>
                 </div>
               );
             })()
